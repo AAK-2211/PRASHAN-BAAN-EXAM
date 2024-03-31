@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+    }
+
+    .quiz-container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    #timer {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 18px;
+    }
+
+    #time-indicator {
+        width: 100%;
+        height: 50px;
+        border-radius: 10px;
+        top: 10px;
+        left: 10px;
+        background-color: green;
+    }
+
+    #question-container {
+        margin-top: 170px;
+    }
+
+    #question {
+        font-size: 20px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .options-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .option-item {
+        margin-bottom: 10px;
+    }
+
+    .option-item label {
+        display: block;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .option-item label:hover {
+        background-color: #e0e0e0;
+    }
+
+    .option-item input[type="radio"] {
+        display: none;
+    }
+
+    .option-item input[type="radio"] + label::before {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+
+    .option-item input[type="radio"]:checked + label::before {
+        background-color: #009688;
+        border-color: #009688;
+    }
+
+    button {
+        padding: 10px 20px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #009688;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #00796b;
+    }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+    <div id="timer">Time Left: 30:00</div>
+    <div id="time-indicator"></div>
+    <h1>MODULE 1</h1>
+    <div id="question-container">
+        <div id="question"></div>
+        <ul class="options-list" id="options"></ul>
+        <button id="prevBtn" onclick="prevQuestion()">Previous</button>
+        <button id="nextBtn" onclick="nextQuestion()">Next</button>
+        <button id="submitBtn" onclick="submitQuiz()">Submit</button>
+    </div>
+    <div id="result-container" style="display: none;">
+        <h2>Results</h2>
+        <p id="score"></p>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            question: "What is the capital of France?",
+            options: ["Paris", "Berlin", "London", "Madrid"],
+            correctAnswer: "Paris"
+        },
+        {
+            question: "What is 2 + 2?",
+            options: ["3", "4", "5", "6"],
+            correctAnswer: "4"
+        },
+        {
+            question: "Which planet is known as the Red Planet?",
+            options: ["Earth", "Mars", "Venus", "Jupiter"],
+            correctAnswer: "Mars"
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLeft = 30 * 60;
+    let timerInterval;
+
+    function showQuestion() {
+        const questionElem = document.getElementById("question");
+        const optionsElem = document.getElementById("options");
+        const question = questions[currentQuestion];
+        questionElem.textContent = question.question;
+        optionsElem.innerHTML = "";
+        question.options.forEach((option, index) => {
+            const optionElem = document.createElement("li");
+            optionElem.classList.add("option-item");
+            optionElem.innerHTML = `
+                <input type="radio" id="option${index}" name="option" value="${option}">
+                <label for="option${index}">${option}</label>
+            `;
+            optionsElem.appendChild(optionElem);
+        });
+
+        document.getElementById("prevBtn").disabled = currentQuestion === 0;
+        document.getElementById("nextBtn").disabled = currentQuestion === questions.length - 1;
+        document.getElementById("submitBtn").style.display = currentQuestion === questions.length - 1 ? "block" : "none";
+    }
+
+    function selectOption(option) {
+        const question = questions[currentQuestion];
+        if (option === question.correctAnswer) {
+            score += 1;
+        } else {
+            score -= 0.25;
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        showQuestion();
+    }
+
+    function prevQuestion() {
+        currentQuestion--;
+        showQuestion();
+    }
+
+    function submitQuiz() {
+        clearInterval(timerInterval);
+        const resultContainer = document.getElementById("result-container");
+        resultContainer.style.display = "block";
+        const scoreElem = document.getElementById("score");
+        scoreElem.textContent = `Your score is: ${score}`;
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById("timer").textContent = `Time Left: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            updateTimerColor();
+            if (timeLeft <= 0) {
+                submitQuiz();
+            }
+        }, 1000);
+    }
+
+    function updateTimerColor() {
+        let color;
+        if (timeLeft >= 60 * 20) {
+            color = "green";
+        } else if (timeLeft >= 60 * 15) {
+            color = "yellow";
+        } else if (timeLeft >= 60 * 10) {
+            color = "orange";
+        } else if (timeLeft >= 60 * 5) {
+            color = "red";
+        } else {
+            color = "darkred";
+        }
+        document.getElementById("time-indicator").style.backgroundColor = color;
+    }
+
+    window.onload = () => {
+        startTimer();
+        showQuestion();
+        updateTimerColor();
+    };
+</script>
+</body>
+</html>
